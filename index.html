@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار القياس العقاري الشامل | مرصد العقاري</title>
+<style>
+  :root {
+    --primary: #0d6e6e;
+    --primary-dark: #0a5555;
+    --accent: #c9a227;
+    --bg: #f7f9fa;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #5a6a6a;
+    --correct: #1e7e34;
+    --wrong: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .container { max-width: 820px; margin: 0 auto; padding: 20px; }
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+    border-radius: 0 0 20px 20px;
+    margin-bottom: 30px;
+  }
+  header h1 { font-size: 1.9rem; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 1rem; }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  .role-select select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1.05rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    margin-top: 10px;
+    background: white;
+  }
+  .question-num { color: var(--primary); font-weight: 700; font-size: 0.9rem; margin-bottom: 8px; }
+  .question-text { font-size: 1.15rem; font-weight: 600; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    padding: 14px 18px;
+    border: 2px solid #e8ecec;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fafcfc;
+  }
+  .option:hover { border-color: var(--primary); background: #f0f8f8; }
+  .option.selected { border-color: var(--primary); background: #e6f4f4; font-weight: 600; }
+  .option.correct { border-color: var(--correct); background: #e8f6eb; }
+  .option.wrong { border-color: var(--wrong); background: #fdeaea; }
+  .btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    font-size: 1.05rem;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+    font-weight: 600;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .progress { height: 8px; background: #e0e0e0; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--primary); transition: width 0.3s; }
+  .result { text-align: center; }
+  .score { font-size: 3.2rem; font-weight: 800; color: var(--primary); margin: 10px 0; }
+  .recommendation { background: #f0f8f8; padding: 18px; border-radius: 12px; margin-top: 16px; text-align: right; }
+  .explanation { margin-top: 12px; padding: 12px; background: #f9f9f9; border-radius: 8px; font-size: 0.95rem; color: var(--muted); display: none; }
+  .footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>اختبار القياس العقاري الشامل</h1>
+    <p>للوسيط • المسوق • البائع • المشتري • المالك • المؤجر • المستأجر • المستثمر • المطور</p>
+  </header>
+
+  <div id="start-screen" class="card">
+    <h2 style="margin-bottom:12px;">اختر دورك في السوق العقاري</h2>
+    <p style="color:var(--muted); margin-bottom:16px;">سيُخصص الاختبار والتوصيات بناءً على دورك، مع تغطية الجوانب القانونية والمهنية والسلوكية المشتركة.</p>
+    <div class="role-select">
+      <select id="role">
+        <option value="broker">وسيط عقاري</option>
+        <option value="marketer">مسوق عقاري</option>
+        <option value="seller">بائع / مالك عقار</option>
+        <option value="buyer">مشتري</option>
+        <option value="owner">مالك عقار</option>
+        <option value="lessor">مؤجر</option>
+        <option value="lessee">مستأجر</option>
+        <option value="investor">مستثمر</option>
+        <option value="developer">مطور عقاري</option>
+      </select>
+    </div>
+    <button class="btn" onclick="startQuiz()">ابدأ الاختبار (16 سؤال)</button>
+  </div>
+
+  <div id="quiz-screen" style="display:none;">
+    <div class="progress"><div class="progress-bar" id="progress"></div></div>
+    <div class="card" id="question-card"></div>
+    <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>التالي</button>
+  </div>
+
+  <div id="result-screen" style="display:none;" class="card result">
+    <h2>نتيجة الاختبار</h2>
+    <div class="score" id="score"></div>
+    <p id="level"></p>
+    <div class="recommendation" id="recommendation"></div>
+    <button class="btn" onclick="location.reload()">إعادة الاختبار</button>
+  </div>
+
+  <div class="footer">
+    اختبار تعليمي وتوعوي • مبني على أنظمة الهيئة العامة للعقار ومنصة إيجار ورسوم الأراضي البيضاء<br>
+    ليس بديلاً عن الاستشارة القانونية أو الترخيص الرسمي
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "هل يجوز ممارسة الوساطة العقارية دون ترخيص من الهيئة العامة للعقار؟",
+    options: ["نعم، إذا كان الوسيط لديه خبرة", "لا، الترخيص إلزامي قبل أي ممارسة", "نعم، فقط للصفقات الصغيرة", "نعم، إذا كان العقد مكتوبًا"],
+    correct: 1,
+    exp: "وفق نظام الوساطة العقارية، لا تجوز ممارسة الوساطة أو الخدمات العقارية إلا بعد الحصول على ترخيص من الهيئة."
+  },
+  {
+    q: "ما العمولة الافتراضية للوسيط في صفقات البيع حسب نظام الوساطة العقارية؟",
+    options: ["1%", "2.5%", "5%", "تُحدد بحرية دون حد"],
+    correct: 1,
+    exp: "العمولة الافتراضية 2.5% من قيمة الصفقة للبيع، و2.5% من إيجار السنة الأولى للإيجار، ما لم يُتفق كتابة على غير ذلك."
+  },
+  {
+    q: "ما المنصة الإلزامية لتوثيق عقود الإيجار السكني والتجاري؟",
+    options: ["منصة إيجار (ejar.sa)", "منصة عقار", "منصة نفاذ فقط", "لا توجد منصة إلزامية"],
+    correct: 0,
+    exp: "منصة إيجار هي المنصة الرسمية لتوثيق عقود الإيجار، والتسجيل إلزامي على الوسطاء."
+  },
+  {
+    q: "ما الحد الأدنى لمساحة الأرض البيضاء الخاضعة للرسم في النظام المحدث؟",
+    options: ["10,000 م²", "5,000 م²", "1,000 م²", "لا يوجد حد أدنى"],
+    correct: 1,
+    exp: "في التعديلات الأخيرة، خُفض الحد الأدنى إلى 5,000 متر مربع (أو مجموع أراضي المالك في المدينة)."
+  },
+  {
+    q: "ما أعلى نسبة رسم سنوي على الأراضي البيضاء في الشريحة ذات الأولوية القصوى؟",
+    options: ["2.5%", "5%", "7.5%", "10%"],
+    correct: 3,
+    exp: "تصل النسبة إلى 10% من قيمة الأرض في الشريحة ذات الأولوية القصوى للتطوير."
+  },
+  {
+    q: "عند وجود احتمال تعارض مصالح، ماذا يجب على الوسيط؟",
+    options: ["إخفاء المعلومة", "الإفصاح كتابةً لأطراف العقد", "الاستمرار دون إفصاح", "إلغاء الصفقة فورًا"],
+    correct: 1,
+    exp: "يلتزم الوسيط بالإفصاح كتابةً عن احتمال تعارض المصالح أو التوسط للطرفين."
+  },
+  {
+    q: "هل يجب الحصول على ترخيص إعلان عقاري مستقل قبل نشر أي إعلان؟",
+    options: ["لا، يكفي ترخيص الوساطة", "نعم، ترخيص إعلان منفصل مطلوب", "فقط للإعلانات المدفوعة", "فقط للمنصات الإلكترونية"],
+    correct: 1,
+    exp: "لائحة التسويق والإعلانات العقارية أوجبت الحصول على ترخيص إعلان عقاري مستقل قبل النشر."
+  },
+  {
+    q: "ما أفضل ممارسة عند التفاوض مع بائع متردد؟",
+    options: ["الضغط الشديد للإغلاق السريع", "الاستماع لمخاوفه وتقديم حلول مدعومة ببيانات", "خفض السعر فورًا دون نقاش", "تجاهل اعتراضاته"],
+    correct: 1,
+    exp: "التفاوض الفعال يعتمد على فهم الدوافع الحقيقية وتقديم قيمة واضحة بدل الضغط."
+  },
+  {
+    q: "كم مدة الاعتراض على بيانات عقد الإيجار بعد الإشعار في إيجار؟",
+    options: ["30 يومًا", "60 يومًا", "90 يومًا", "لا يوجد اعتراض"],
+    correct: 1,
+    exp: "يملك الطرف الآخر 60 يومًا للاعتراض على بيانات العقد بعد إشعاره."
+  },
+  {
+    q: "ما الذي يجب التحقق منه قبل تقديم أي عرض عقاري؟",
+    options: ["سعر السوق فقط", "وثائق الملكية والرخص الرسمية", "لون العقار فقط", "رأي الجيران"],
+    correct: 1,
+    exp: "يجب التحقق من صحة المعلومات والوثائق الرسمية (مثل رخصة البناء وصك الملكية) وبذل العناية اللازمة."
+  },
+  {
+    q: "في حالة المستثمر الذي يبحث عن عائد إيجاري مستقر، ما الأولوية؟",
+    options: ["الموقع فقط", "جودة المستأجرين والعقود الموثقة والعائد الصافي", "المساحة الكبيرة فقط", "السعر المنخفض فقط"],
+    correct: 1,
+    exp: "الاستثمار السليم يركز على العائد الصافي بعد التكاليف، واستقرار المستأجرين، والتوثيق النظامي."
+  },
+  {
+    q: "ما غرامة ممارسة الوساطة دون ترخيص (تقريبًا)؟",
+    options: ["إنذار فقط", "غرامة تصل إلى 200,000 ريال + إجراءات أخرى", "لا توجد عقوبة", "غرامة رمزية 1,000 ريال"],
+    correct: 1,
+    exp: "العقوبات تشمل الإنذار أو تعليق/إلغاء الترخيص أو غرامة لا تتجاوز 200,000 ريال."
+  },
+  {
+    q: "عند تسويق عقار لمشتري، ما المعلومة التي يجب الإفصاح عنها بوضوح؟",
+    options: ["الإيجابيات فقط", "الحالة الحقيقية والعيوب المعروفة والوثائق", "السعر فقط", "لا شيء إضافي"],
+    correct: 1,
+    exp: "الشفافية والإفصاح عن المعلومات الدقيقة يحمي جميع الأطراف ويجنب النزاعات."
+  },
+  {
+    q: "ما أفضل طريقة لزيادة ثقة العميل (بائع أو مشتري)؟",
+    options: ["الوعود المبالغ فيها", "الالتزام بالمواعيد وتقديم معلومات موثقة", "التواصل المتقطع", "التركيز على العمولة فقط"],
+    correct: 1,
+    exp: "الثقة تُبنى بالاحترافية، الشفافية، والالتزام بالأنظمة."
+  },
+  {
+    q: "للمطور العقاري، ما الالتزام الأساسي عند تسويق المشروع؟",
+    options: ["الإعلان دون ترخيص إذا كان المشروع كبيرًا", "الالتزام بضوابط الإعلانات والترخيص حسب الأنظمة", "الإعلان على وسائل التواصل فقط", "عدم الحاجة لأي ترخيص"],
+    correct: 1,
+    exp: "حتى للمطورين، هناك ضوابط محددة للإعلانات، وبعض المشاريع تُعفى بشروط مع ذكر الرخصة."
+  },
+  {
+    q: "ما الخطوة الأولى الصحيحة لمالك يريد تأجير عقاره؟",
+    options: ["نشر الإعلان مباشرة", "التعاقد مع وسيط مرخص وتوثيق العقد عبر إيجار", "كتابة عقد ورقي فقط", "استلام الإيجار نقدًا دون توثيق"],
+    correct: 1,
+    exp: "التوثيق عبر إيجار بوسيط مرخص يحمي حقوق المالك والمستأجر ويُعد إلزاميًا."
+  }
+];
+
+let current = 0;
+let score = 0;
+let selectedRole = "";
+let answers = [];
+
+function startQuiz() {
+  selectedRole = document.getElementById("role").value;
+  document.getElementById("start-screen").style.display = "none";
+  document.getElementById("quiz-screen").style.display = "block";
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[current];
+  const progress = ((current) / questions.length) * 100;
+  document.getElementById("progress").style.width = progress + "%";
+
+  let html = `<div class="question-num">السؤال ${current + 1} من ${questions.length}</div>
+              <div class="question-text">${q.q}</div>
+              <div class="options">`;
+  q.options.forEach((opt, i) => {
+    html += `<div class="option" onclick="selectOption(this, ${i})">${opt}</div>`;
+  });
+  html += `</div><div class="explanation" id="exp">${q.exp}</div>`;
+  document.getElementById("question-card").innerHTML = html;
+  document.getElementById("next-btn").disabled = true;
+  document.getElementById("next-btn").textContent = current === questions.length - 1 ? "عرض النتيجة" : "التالي";
+}
+
+function selectOption(el, idx) {
+  document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+  el.classList.add("selected");
+  answers[current] = idx;
+  document.getElementById("next-btn").disabled = false;
+}
+
+function nextQuestion() {
+  const q = questions[current];
+  const selected = answers[current];
+  const options = document.querySelectorAll(".option");
+  options.forEach((opt, i) => {
+    if (i === q.correct) opt.classList.add("correct");
+    else if (i === selected) opt.classList.add("wrong");
+  });
+  document.getElementById("exp").style.display = "block";
+  document.getElementById("next-btn").disabled = true;
+
+  if (selected === q.correct) score++;
+
+  setTimeout(() => {
+    current++;
+    if (current < questions.length) {
+      showQuestion();
+    } else {
+      showResult();
+    }
+  }, 1200);
+}
+
+function showResult() {
+  document.getElementById("quiz-screen").style.display = "none";
+  document.getElementById("result-screen").style.display = "block";
+  const percent = Math.round((score / questions.length) * 100);
+  document.getElementById("score").textContent = percent + "%";
+
+  let level = "";
+  let rec = "";
+  if (percent >= 85) {
+    level = "ممتاز - مستوى احترافي عالي";
+    rec = "أنت على دراية جيدة بالأنظمة والممارسات. ركّز على تطوير مهارات التفاوض والتسويق المتقدم وبناء شبكة علاقات قوية.";
+  } else if (percent >= 70) {
+    level = "جيد جدًا - جاهز للممارسة مع تحسينات";
+    rec = "أساس قوي. يُنصح بمراجعة تفاصيل نظام الوساطة ولائحة الإعلانات ومنصة إيجار لتعميق المعرفة.";
+  } else if (percent >= 50) {
+    level = "متوسط - يحتاج تطوير";
+    rec = "لديك بعض المعرفة، لكن هناك فجوات مهمة في الجوانب النظامية. يُفضل حضور برامج تأهيل الهيئة العامة للعقار.";
+  } else {
+    level = "يحتاج تعزيز كبير";
+    rec = "يُنصح بالبدء بالبرامج التأهيلية الرسمية للهيئة العامة للعقار قبل الممارسة، والاطلاع الدقيق على نظام الوساطة ومنصة إيجار.";
+  }
+
+  const roleNames = {
+    broker: "الوسيط العقاري",
+    marketer: "المسوق العقاري",
+    seller: "البائع / المالك",
+    buyer: "المشتري",
+    owner: "المالك",
+    lessor: "المؤجر",
+    lessee: "المستأجر",
+    investor: "المستثمر",
+    developer: "المطور العقاري"
+  };
+
+  rec += `<br><br><strong>توصية خاصة بدورك (${roleNames[selectedRole]}):</strong> `;
+  if (["broker","marketer","developer"].includes(selectedRole)) {
+    rec += "تأكد من استيفاء متطلبات الترخيص والتأهيل المستمر، والالتزام بالإفصاح والشفافية في كل صفقة.";
+  } else if (["seller","owner","lessor"].includes(selectedRole)) {
+    rec += "تعامل دائمًا مع وسطاء مرخصين، ووثّق العقود عبر إيجار، وتحقق من التزامات الرسوم (الأراضي البيضاء إن وجدت).";
+  } else if (selectedRole === "buyer" || selectedRole === "lessee") {
+    rec += "اطلب الوثائق الرسمية، وتأكد من ترخيص الوسيط، وراجع العقد بعناية قبل التوقيع أو التوثيق.";
+  } else if (selectedRole === "investor") {
+    rec += "ركز على العائد الصافي، الامتثال النظامي، وتأثير الرسوم والتنظيمات على قيمة الأصول.";
+  }
+
+  document.getElementById("level").textContent = level;
+  document.getElementById("recommendation").innerHTML = rec;
+}
+</script>
+</body>
+</html>
